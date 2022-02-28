@@ -9,7 +9,9 @@ import parse, { qs } from 'url-parse';
 /*
  * Returns an object with default context properties.
  */
-export const getContextDefaults = () => {
+export const getContextDefaults = (): {
+  library: { version: string; name: string };
+} => {
   return {
     library: {
       version: PACKAGE_VERSION,
@@ -21,7 +23,7 @@ export const getContextDefaults = () => {
 /*
  * Returns an object with default page properties.
  */
-export const getPageDefaults = () => {
+export const getPageDefaults = (): Record<string, unknown> => {
   if (typeof window === 'undefined') {
     return {};
   }
@@ -52,6 +54,7 @@ export const getPageDefaults = () => {
  * '?colors=3|11&categories=187345'
  * }
  */
-export const stringifyQuery = query => {
+
+export const stringifyQuery = (query: Record<string, unknown>): string => {
   return qs.stringify(query, true);
 };

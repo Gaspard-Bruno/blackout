@@ -5,6 +5,11 @@ import get from 'lodash/get';
 import merge from 'lodash/merge';
 import trackTypes from './types/trackTypes';
 import User from './User';
+import type { IntegrationFactory } from './integrations/Integration';
+import type { Storage } from './utils/types';
+import type ConsentData from './types/consentData.types';
+import type EventData from './types/eventData.types';
+import type IntegrationRuntimeData from './types/integrationRuntimeData.types';
 
 // @TODO: evaluate this TS rule
 /* eslint-disable  @typescript-eslint/no-empty-function */
@@ -14,7 +19,21 @@ import User from './User';
  *
  * @category Analytics
  */
+
 class Analytics {
+  isReady: boolean;
+  storage: StorageWrapper | null;
+  contextFns: Array<() => unknown>;
+  userInstance: User | null;
+  consentInstance: Consent | null;
+  integrations: Map<string, IntegrationRuntimeData>;
+  activeIntegrations: Map<string, IntegrationRuntimeData>;
+  setUserPromiseResolve: ((value?: unknown) => void) | null;
+  setStoragePromiseResolve: ((value?: unknown) => void) | null;
+  platform: string | undefined;
+  setUserPromise: Promise<unknown>;
+  setStoragePromise: Promise<unknown>;
+
   /**
    * Creates a new Analytics instance with the given platform type.
    * The analytics instance must be created by @farfetch/blackout-react/analytics or @farfetch/blackout-react-native/analytics.
@@ -22,7 +41,7 @@ class Analytics {
    *
    * @param {module:platformTypes} platform - The platform type where the instance is going to be used.
    */
-  constructor(platform) {
+  constructor(platform?: string) {
     this.isReady = false;
     this.storage = null;
     this.contextFns = [];
@@ -49,7 +68,9 @@ class Analytics {
    * @param {string} [key] - Key to retrieve from the consent. If not specified, will return the whole data stored in the consent object.
    * @returns {Promise<(boolean | object)>} Value for the key in consent or the whole consent data if key is not specified.
    */
-  async consent(key) {
+  async consent(
+    key?: keyof ConsentData,
+  ): Promise<ConsentData | boolean | null> {
     if (!this.storage) {
       logger.error(
         'Tried to call `analytics.consent` before a storage was defined with `analytics.setStorage`. Returning null.',
@@ -60,13 +81,14 @@ class Analytics {
     await this.setStoragePromise;
 
     try {
-      const data = await this.consentInstance.get();
+      const data = await (this.consentInstance as Consent).get();
 
       return key ? get(data, key) : data;
     } catch (error) {
       logger.error(
         `An error occurred when trying to get consent data: ${error}`,
       );
+      return null;
     }
   }
 
@@ -76,7 +98,7 @@ class Analytics {
    * @param {string} [key] - Key to retrieve from the context. If not specified, will return the whole data stored in the context.
    * @returns {Promise<*>} Value for the key in context or the whole context data if key is not specified.
    */
-  async context(key) {
+  async context(key?: string): Promise<unknown> {
     const externalContextData = {};
 
     for (const contextFn of this.contextFns) {
@@ -105,7 +127,7 @@ class Analytics {
    * @param {string} name - Name of the integration in lowerCase.
    * @returns {(Integration|null)} The integration instance if it exists and was loaded, otherwise null.
    */
-  integration(name) {
+  integration(name: string): Integration | null {
     return get(this.integrations.get(name), 'instance', null);
   }
 
@@ -115,7 +137,7 @@ class Analytics {
    * @param {string} [key] - The key of the user object that is returned.
    * @returns {Promise<*>} Value for the key in user or the whole user data if key is not specified.
    */
-  async user(key) {
+  async user(key?: string): Promise<Record<string, unknown> | unknown> {
     if (!this.storage) {
       logger.error(
         'Tried to call `analytics.user` before a storage was defined with `analytics.setStorage`. Returning null.',
@@ -127,13 +149,14 @@ class Analytics {
     await this.setStoragePromise;
 
     try {
-      const data = await this.userInstance.get();
+      const data = await (this.userInstance && this.userInstance.get());
 
-      return get(data, key, data);
+      return get(data, key as string, data);
     } catch (error) {
       logger.error(
         `An error occurred when trying to get user value for key '${key}': ${error}. Returning null instead.`,
       );
+      return null;
     }
 
     return null;
@@ -142,10 +165,17 @@ class Analytics {
   /**
    * Sets the consent and passes it to the registered integrations.
    *
-   * @param {object} data - Consent object to be stored.
+   * @param {ConsentData} data - Consent object to be stored.
+   * @param data.marketing
+   * @param data.preferences
+   * @param data.statistics
    * @returns {Promise<Analytics>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async setConsent(data) {
+  async setConsent(data: {
+    marketing?: boolean;
+    preferences?: boolean;
+    statistics?: boolean;
+  }): Promise<Analytics> {
     if (!this.storage) {
       logger.error(
         'Tried to call `analytics.setConsent` before a storage was defined with `analytics.setStorage`. This will be a noop.',
@@ -155,14 +185,15 @@ class Analytics {
     }
 
     try {
-      await this.consentInstance.set(data);
+      await (this.consentInstance && this.consentInstance.set(data));
 
       const consented = await this.consent();
 
       // Since this.integrations is a Map instance, we can call Map.prototype.forEach,
       // which returns the value as first parameter
       this.activeIntegrations.forEach(
-        item => item.instance && item.instance.setConsent(consented),
+        item =>
+          item.instance && item.instance.setConsent(consented as ConsentData),
       );
 
       await this.loadIntegrations(true);
@@ -176,10 +207,14 @@ class Analytics {
   /**
    * This method will be called whenever integrations are loaded into analytics. To be overriden by subclasses.
    *
+   * @param loadedIntegrations
    * @protected
    * @returns {Promise} Promise that will resolve when the method finishes.
    */
-  async onLoadedIntegrations() {}
+  async onLoadedIntegrations(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    loadedIntegrations: IntegrationRuntimeData[],
+  ): Promise<void> {}
 
   /**
    * [DEPRECATED] - Replaced by useContext.
@@ -187,7 +222,7 @@ class Analytics {
    * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
    *
    */
-  setContext() {
+  setContext(): Analytics {
     logger.error(
       '`analytics.setContext is deprecated. Use analytics.useContext instead. This will be a noop.`',
     );
@@ -203,7 +238,7 @@ class Analytics {
    * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
    *
    */
-  useContext(contextFn) {
+  useContext(contextFn: () => unknown): Analytics {
     if (typeof contextFn !== 'function') {
       logger.error(
         'Invalid context argument provided to `analytics.useContext`. You must provide a function.',
@@ -225,7 +260,7 @@ class Analytics {
    *
    * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
    */
-  setStorage(storage) {
+  setStorage(storage: Storage | null): Analytics {
     if (this.isReady) {
       logger.error('Cannot call setStorage after analytics is ready.');
 
@@ -235,7 +270,7 @@ class Analytics {
     let wrappedStorage;
 
     try {
-      wrappedStorage = new StorageWrapper(storage);
+      wrappedStorage = new StorageWrapper(storage || undefined);
     } catch (e) {
       logger.error(`An error occurred when trying to create storage: ${e}`);
       return this;
@@ -261,7 +296,10 @@ class Analytics {
    *
    * @returns {Promise<Analytics>}     Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async setUser(userId = null, traits = {}) {
+  async setUser(
+    userId: string | null = null,
+    traits: Record<string, unknown> = {},
+  ): Promise<Analytics> {
     if (!this.storage) {
       logger.error(
         'Tried to call `analytics.setUser` before a storage was defined with `analytics.setStorage`. This will be a noop.',
@@ -271,7 +309,7 @@ class Analytics {
     }
 
     try {
-      await this.userInstance.set(userId, traits);
+      this.userInstance && (await this.userInstance.set(userId, traits));
 
       await this.handleOnUserChanged();
     } catch (error) {
@@ -292,7 +330,11 @@ class Analytics {
    * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
    *
    */
-  addIntegration(name, Factory, options) {
+  addIntegration(
+    name: string,
+    Factory: IntegrationFactory,
+    options: Record<string, unknown> = {},
+  ): Analytics {
     const isSubclass = Factory.prototype instanceof Integration;
 
     if (!isSubclass) {
@@ -304,7 +346,7 @@ class Analytics {
     }
 
     this.integrations.set(name, {
-      instance: null,
+      instance: undefined,
       Factory,
       options,
     });
@@ -318,7 +360,7 @@ class Analytics {
    * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
    *
    */
-  anonymize() {
+  anonymize(): Analytics {
     if (!this.storage) {
       logger.error(
         'Tried to call `analytics.anonymize` before a storage was defined with `analytics.setStorage`. This will be a noop.',
@@ -328,7 +370,7 @@ class Analytics {
     }
 
     try {
-      this.userInstance.anonymize();
+      this.userInstance && this.userInstance.anonymize();
 
       this.handleOnUserChanged();
     } catch (e) {
@@ -350,7 +392,12 @@ class Analytics {
    * @returns {Promise<Analytics>}    Promise that will resolve with the instance that was used when calling this method to allow chaining.
 .
    */
-  async track(type = trackTypes.TRACK, event, properties, eventContext) {
+  async track(
+    type = trackTypes.TRACK,
+    event: string,
+    properties?: Record<string, unknown>,
+    eventContext?: Record<string, unknown>,
+  ): Promise<Analytics> {
     if (!this.isReady) {
       logger.error(
         `Analytics tried to track the event ${event} but failed. Did you forget to call "analytics.ready()?"`,
@@ -392,13 +439,15 @@ class Analytics {
    * setConsent methods in order to load integrations that are not yet loaded. It's safe to call this method
    * many times.
    *
-   * @param {boolean} raiseOnLoadedIntegrationsEvent - If the onloadedIntegrations event should be raised by calling `onLoadedIntegrations` or not.
+   * @param {boolean} raiseOnLoadedIntegrationsEvent - If the onLoadedIntegrations event should be raised by calling `onLoadedIntegrations` or not.
    *
    * @private
-   * @returns {Promise}                              Promise that will resolve when the method finishes.
+   * @returns {Promise} Promise that will resolve when the method finishes.
    */
-  async loadIntegrations(raiseOnLoadedIntegrationsEvent) {
-    const loadedIntegrations = [];
+  async loadIntegrations(
+    raiseOnLoadedIntegrationsEvent: boolean,
+  ): Promise<void> {
+    const loadedIntegrations: IntegrationRuntimeData[] = [];
     const loadEventData = await this.getLoadEventData();
 
     const strippedDownAnalytics = {
@@ -467,7 +516,7 @@ class Analytics {
    *
    * @returns {Promise<Analytics>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async ready() {
+  async ready(): Promise<Analytics> {
     if (!this.storage) {
       logger.error(
         'No storage instance is available to analytics. Please, call analytics.setStorage() with a valid storage instance',
@@ -487,19 +536,24 @@ class Analytics {
    * Call a method in all integrations with the specified args and an optional log tag
    * to be used in all logger calls.
    *
-   * @param {Iterable<Integration>} integrations   - Integrations to call the method.
+   * @param {Map<Integration>} integrations   - Integrations to call the method.
    * @param {string} methodName                    - Name of the method to be called in all integrations.
    * @param  {...*} args                         - Arguments to be passed to the method.
    * @private
    */
-  callIntegrationsMethod(integrations, methodName, ...args) {
+  callIntegrationsMethod(
+    integrations: Map<string, IntegrationRuntimeData>,
+    methodName: string,
+    ...args: unknown[]
+  ): void {
     if (!integrations || !integrations.forEach) {
       return;
     }
 
     integrations.forEach((item, intName) => {
       try {
-        item.instance[methodName](...args);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (item.instance as any)[methodName](...args);
       } catch (e) {
         logger.error(
           `${methodName} skipped for integration: '${intName}': Unhandled exception: ${e}`,
@@ -514,7 +568,7 @@ class Analytics {
    *
    * @private
    */
-  async handleOnUserChanged() {
+  async handleOnUserChanged(): Promise<void> {
     if (this.setUserPromiseResolve) {
       this.setUserPromiseResolve();
       this.setUserPromiseResolve = null;
@@ -542,16 +596,20 @@ class Analytics {
    * @returns {Promise<object>}                     - Data for the event.
    * @private
    */
-  async getEventData(type, additionalData, eventContext) {
+  async getEventData(
+    type: string,
+    additionalData?: Record<string, unknown>,
+    eventContext?: Record<string, unknown>,
+  ): Promise<EventData> {
     const context = await this.context();
 
     Object.assign(context, { event: eventContext });
 
-    const commonData = {
+    const commonData: EventData = {
       type,
-      context,
+      context: context as Record<string, unknown>,
       platform: this.platform,
-      consent: await this.consent(),
+      consent: (await this.consent()) as ConsentData,
       user: await this.user(),
       timestamp: new Date().getTime(),
     };
@@ -568,7 +626,7 @@ class Analytics {
    * @returns {Promise<object>} - User data to be sent to integrations.
    * @private
    */
-  async getSetUserEventData() {
+  async getSetUserEventData(): Promise<EventData> {
     return await this.getEventData('onSetUser', {
       event: 'onSetUser',
       properties: {},
@@ -581,7 +639,7 @@ class Analytics {
    * @returns {Promise<object>} - Load data to be sent to integrations.
    * @private
    */
-  async getLoadEventData() {
+  async getLoadEventData(): Promise<EventData> {
     return await this.getEventData('loadIntegration', {
       event: 'loadIntegration',
       properties: {},
@@ -599,7 +657,12 @@ class Analytics {
    * @returns {Promise<object>}                - Track event data to be sent to integrations.
    * @private
    */
-  async getTrackEventData(type, event, properties, eventContext) {
+  async getTrackEventData(
+    type: string,
+    event: string,
+    properties?: Record<string, unknown>,
+    eventContext?: Record<string, unknown>,
+  ): Promise<Record<string, unknown>> {
     return await this.getEventData(
       type,
       {

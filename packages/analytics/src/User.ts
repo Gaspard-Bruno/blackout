@@ -1,5 +1,6 @@
 import Entity from './Entity';
 import uuid from 'uuid';
+import type { StorageWrapper } from './utils';
 
 /**
  * Handles and persists user data on the instance.
@@ -9,12 +10,14 @@ import uuid from 'uuid';
  * @category Analytics
  */
 class User extends Entity {
+  storage: StorageWrapper;
+
   /**
    * Constructs a new user instance with the passed in storage wrapper instance.
    *
    * @param {StorageWrapper} storage - The storage wrapper instance where data will be stored.
    */
-  constructor(storage) {
+  constructor(storage: StorageWrapper) {
     super();
 
     // NOTE: For now, we will only check if the storage reference is set to something,
@@ -36,15 +39,15 @@ class User extends Entity {
    *
    * @returns {Promise<string>} Promise that will resolve with the user local ID (GUID).
    */
-  async localId() {
-    let localId = await this.storage.getItem('localId');
+  async localId(): Promise<string> {
+    let localId = (await this.storage.getItem('localId')) as string | undefined;
 
     if (!localId) {
       localId = uuid.v4();
       await this.storage.setItem('localId', localId);
     }
 
-    return localId;
+    return localId as string;
   }
 
   /**
@@ -53,7 +56,7 @@ class User extends Entity {
    *
    * @returns {Promise<object>} Promise that will resolve with the user's data.
    */
-  async get() {
+  async get(): Promise<Record<string, unknown>> {
     const localId = await this.localId();
 
     return {
@@ -70,7 +73,7 @@ class User extends Entity {
    *
    * @returns {Promise<User>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async set(id = null, traits = {}) {
+  async set(id: string | null = null, traits = {}): Promise<User> {
     // Generate a new localId and store it (if needed)
     await this.localId();
 
@@ -87,7 +90,7 @@ class User extends Entity {
    *
    * @returns {Promise<User>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async anonymize() {
+  async anonymize(): Promise<User> {
     // Reset the user with defaults
     super.set({ id: null, traits: {} }, true);
 

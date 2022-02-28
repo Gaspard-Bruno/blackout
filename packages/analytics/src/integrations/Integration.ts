@@ -1,4 +1,21 @@
 /* eslint-disable no-unused-vars */
+
+import type ConsentData from '../types/consentData.types';
+
+export interface IntegrationFactory {
+  new (
+    options: Record<string, unknown>,
+    loadData: Record<string, unknown>,
+    strippedDownAnalytics: Record<string, unknown>,
+  ): Integration;
+  createInstance(
+    options: Record<string, unknown>,
+    loadData: Record<string, unknown>,
+    analytics: Record<string, unknown>,
+  ): Integration;
+  shouldLoad(consent: Record<string, unknown>): boolean;
+}
+
 /**
  * Base class for integrations.
  * It ensures the base functionality in order to work with analytics.
@@ -9,7 +26,11 @@
 
 // @TODO: evaluate this TS rule
 /* eslint-disable  @typescript-eslint/no-empty-function */
-class Integration {
+abstract class Integration {
+  options: Record<string, unknown>;
+  loadData: Record<string, unknown>;
+  strippedDownAnalytics: Record<string, unknown>;
+
   /**
    * @hideconstructor
    *
@@ -17,7 +38,11 @@ class Integration {
    * @param {object} loadData              - Analytics's load event data.
    * @param {object} strippedDownAnalytics - Analytics instance stripped down with only helpers.
    */
-  constructor(options = {}, loadData, strippedDownAnalytics) {
+  constructor(
+    options: Record<string, unknown> = {},
+    loadData: Record<string, unknown> = {},
+    strippedDownAnalytics: Record<string, unknown> = {},
+  ) {
     this.options = options;
     this.loadData = loadData;
     this.strippedDownAnalytics = strippedDownAnalytics;
@@ -31,7 +56,7 @@ class Integration {
    * @returns {boolean} If the integration is ready to be loaded.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static shouldLoad(consent) {
+  static shouldLoad(consent: Record<string, unknown>): boolean {
     return false;
   }
 
@@ -42,8 +67,14 @@ class Integration {
    * @param {object} loadData  - Analytics's load event data.
    * @param {object} analytics - Analytics instance stripped down with only helpers.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static createInstance(options, loadData, analytics) {}
+  static createInstance(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    options: Record<string, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    loadData: Record<string, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    analytics: Record<string, unknown>,
+  ): void {}
 
   /**
    *
@@ -52,7 +83,7 @@ class Integration {
    * @param {object} data - Event data.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  track(data) {}
+  abstract track(data: Record<string, unknown>): void;
 
   /**
    * Method to work with the consent object by the class that extends this one.
@@ -60,7 +91,7 @@ class Integration {
    * @param {object} consent - Consent object.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setConsent(consent) {}
+  setConsent(consent: ConsentData): void {}
 
   /**
    * Method called after user has been set in analytics.
@@ -68,7 +99,7 @@ class Integration {
    * @param {object} data - Event data.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onSetUser(data) {}
+  onSetUser(data: Record<string, unknown>): void {}
 }
 
 export default Integration;

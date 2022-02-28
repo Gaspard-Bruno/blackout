@@ -2,6 +2,7 @@ import { PACKAGE_NAME } from './constants';
 import get from 'lodash/get';
 import merge from 'lodash/merge';
 import validateStorage from './validateStorage';
+import type { Storage } from './types';
 
 const oldStorageKey = '@farfetch/blackout-core/analytics';
 
@@ -12,24 +13,26 @@ const oldStorageKey = '@farfetch/blackout-core/analytics';
  * @category Analytics
  */
 class StorageWrapper {
+  storage: Storage;
+
   /**
    * Constructs a new instance with the passed in storage instance and initializes the store.
    * This storage instance must implement the methods async getItem(key), async setItem(key, data) and async removeItem(key) methods.
    * For now it validates only if the storage is defined and if not, an error will be thrown.
    * In the future, the validation logic will be changed to ensure the required methods are implemented on the passed in instance.
    *
-   * @param {object} storage - The underlying storage instance that will store the data.
+   * @param storage - The underlying storage instance that will store the data.
    *
    * //TODO: Change validateStorage function to validate if the storage instance contains the required methods.
    */
-  constructor(storage) {
+  constructor(storage?: Storage) {
     if (!validateStorage(storage)) {
       throw new Error(
         'StorageWrapper needs a valid storage to properly persist data. Please make sure you are passing a valid storage.',
       );
     }
-
-    this.createStorage(storage);
+    this.storage = storage as Storage;
+    this.createStorage(storage as Storage);
   }
 
   /**
@@ -41,7 +44,7 @@ class StorageWrapper {
    *
    * @returns {Promise<StorageWrapper>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async preProcessStorage() {
+  async preProcessStorage(): Promise<this> {
     const oldStorage = await this.storage.getItem(oldStorageKey);
 
     if (oldStorage) {
@@ -58,11 +61,11 @@ class StorageWrapper {
    * Checks if there's a previous TTL stored, and if it's expired, stores a new one.
    *
    * @private
-   * @param {object} storage - The actual storage that will hold the data, like the browser localStorage.
+   * @param storage - The actual storage that will hold the data, like the browser localStorage.
    *
    * @returns {Promise} Promise that will resolve when the method finishes.
    */
-  async createStorage(storage) {
+  async createStorage(storage: Storage): Promise<void> {
     this.storage = storage;
 
     await this.preProcessStorage();
@@ -86,7 +89,9 @@ class StorageWrapper {
    *
    * @returns {Promise<*>} Promise that will resolve the value for the specified key.
    */
-  async getItem(key) {
+  async getItem(
+    key?: string,
+  ): Promise<Record<string, unknown> | unknown | undefined> {
     const storeRawValue = await this.storage.getItem(PACKAGE_NAME);
     const store = JSON.parse(storeRawValue || '{}');
 
@@ -105,7 +110,7 @@ class StorageWrapper {
    *
    * @returns {Promise<StorageWrapper>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async setItem(key, data) {
+  async setItem(key?: string, data?: unknown): Promise<this> {
     if (!key) {
       return this;
     }
@@ -125,10 +130,11 @@ class StorageWrapper {
    *
    * @returns {Promise<StorageWrapper>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async removeItem(key) {
+  async removeItem(key: string): Promise<this> {
     const store = await this.getItem();
 
-    delete store[key];
+    if (store && store instanceof Object)
+      delete (store as Record<string, unknown>)[key];
 
     await this.storage.setItem(PACKAGE_NAME, JSON.stringify(store));
 
@@ -140,7 +146,7 @@ class StorageWrapper {
    *
    * @returns {Promise<StorageWrapper>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
-  async clear() {
+  async clear(): Promise<this> {
     await this.storage.removeItem(PACKAGE_NAME);
 
     return this;
