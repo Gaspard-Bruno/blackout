@@ -40,9 +40,9 @@ export const getPageDefaults = (): Record<string, unknown> => {
  * It uses the qs named export from url-parse (that is used by the url-parse's parse method internally to build the query object)
  * to stringify the passed in query object.
  *
- * @param {object} query - Query object to stringify.
+ * @param query - Query object to stringify.
  *
- * @returns {string} - Returns the query string object stringified.
+ * @returns Returns the query string object stringified.
  *
  * @example
  * Input query object

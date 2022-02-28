@@ -2,8 +2,7 @@ import analytics from '../analytics';
 import AnalyticsCore, {
   trackTypes as analyticsTrackTypes,
   integrations,
-} from '../../../../analytics/src';
-// } from '@farfetch/blackout-analytics';
+} from '@farfetch/blackout-analytics';
 import TestStorage from 'test-storage';
 
 class LoadableIntegration extends integrations.Integration {

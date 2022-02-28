@@ -42,7 +42,7 @@ class StorageWrapper {
    *
    * @private
    *
-   * @returns {Promise<StorageWrapper>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async preProcessStorage(): Promise<this> {
     const oldStorage = await this.storage.getItem(oldStorageKey);
@@ -63,7 +63,7 @@ class StorageWrapper {
    * @private
    * @param storage - The actual storage that will hold the data, like the browser localStorage.
    *
-   * @returns {Promise} Promise that will resolve when the method finishes.
+   * @returns Promise that will resolve when the method finishes.
    */
   async createStorage(storage: Storage): Promise<void> {
     this.storage = storage;
@@ -85,9 +85,9 @@ class StorageWrapper {
   /**
    * Returns a value from the storage, or the storage itself if no key is passed.
    *
-   * @param {string} [key] - The key of the storage to return. If not passed, all items will be returned.
+   * @param key - The key of the storage to return. If not passed, all items will be returned.
    *
-   * @returns {Promise<*>} Promise that will resolve the value for the specified key.
+   * @returns Promise that will resolve the value for the specified key.
    */
   async getItem(
     key?: string,
@@ -105,10 +105,10 @@ class StorageWrapper {
   /**
    * Sets a value with a key on the storage.
    *
-   * @param {string} key - The key to store.
-   * @param {*} data - The data to store with the passed key.
+   * @param key - The key to store.
+   * @param data - The data to store with the passed key.
    *
-   * @returns {Promise<StorageWrapper>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async setItem(key?: string, data?: unknown): Promise<this> {
     if (!key) {
@@ -126,9 +126,9 @@ class StorageWrapper {
   /**
    * Removes a value with the specified key from the store.
    *
-   * @param {string} key - The key to the item that will be removed.
+   * @param key - The key to the item that will be removed.
    *
-   * @returns {Promise<StorageWrapper>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async removeItem(key: string): Promise<this> {
     const store = await this.getItem();
@@ -144,7 +144,7 @@ class StorageWrapper {
   /**
    * Removes the whole entry form the storage.
    *
-   * @returns {Promise<StorageWrapper>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async clear(): Promise<this> {
     await this.storage.removeItem(PACKAGE_NAME);

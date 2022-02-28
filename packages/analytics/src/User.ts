@@ -15,7 +15,7 @@ class User extends Entity {
   /**
    * Constructs a new user instance with the passed in storage wrapper instance.
    *
-   * @param {StorageWrapper} storage - The storage wrapper instance where data will be stored.
+   * @param storage - The storage wrapper instance where data will be stored.
    */
   constructor(storage: StorageWrapper) {
     super();
@@ -37,7 +37,7 @@ class User extends Entity {
    * Creates a new guid if there's none already created and stored.
    * This ID will be persisted as long as the TTL(time-to-live) set in the storage (Max. Up to one year, due to GDPR regulations).
    *
-   * @returns {Promise<string>} Promise that will resolve with the user local ID (GUID).
+   * @returns Promise that will resolve with the user local ID (GUID).
    */
   async localId(): Promise<string> {
     let localId = (await this.storage.getItem('localId')) as string | undefined;
@@ -54,7 +54,7 @@ class User extends Entity {
    * Returns the user data.
    * Fetches localId from storage and merges with super.get() object.
    *
-   * @returns {Promise<object>} Promise that will resolve with the user's data.
+   * @returns Promise that will resolve with the user's data.
    */
   async get(): Promise<Record<string, unknown>> {
     const localId = await this.localId();
@@ -68,10 +68,10 @@ class User extends Entity {
   /**
    * Allows to pass user ID and its properties (traits) to be merged with existing ones on the store.
    *
-   * @param {string} id - Id of the user.
-   * @param {object} traits - Properties like name, email, etc of the user.
+   * @param id - Id of the user.
+   * @param traits - Properties like name, email, etc of the user.
    *
-   * @returns {Promise<User>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async set(id: string | null = null, traits = {}): Promise<User> {
     // Generate a new localId and store it (if needed)
@@ -88,7 +88,7 @@ class User extends Entity {
   /**
    * Deletes user data.
    *
-   * @returns {Promise<User>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async anonymize(): Promise<User> {
     // Reset the user with defaults

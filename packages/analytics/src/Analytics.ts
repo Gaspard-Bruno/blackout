@@ -39,7 +39,7 @@ class Analytics {
    * The analytics instance must be created by @farfetch/blackout-react/analytics or @farfetch/blackout-react-native/analytics.
    * Each one of the two will properly extend this core to add all functionality needed for web or native, respectively.
    *
-   * @param {module:platformTypes} platform - The platform type where the instance is going to be used.
+   * @param platform - The platform type where the instance is going to be used.
    */
   constructor(platform?: string) {
     this.isReady = false;
@@ -65,8 +65,8 @@ class Analytics {
   /**
    * Getter for the consent object.
    *
-   * @param {string} [key] - Key to retrieve from the consent. If not specified, will return the whole data stored in the consent object.
-   * @returns {Promise<(boolean | object)>} Value for the key in consent or the whole consent data if key is not specified.
+   * @param key - Key to retrieve from the consent. If not specified, will return the whole data stored in the consent object.
+   * @returns Value for the key in consent or the whole consent data if key is not specified.
    */
   async consent(
     key?: keyof ConsentData,
@@ -95,8 +95,8 @@ class Analytics {
   /**
    * Getter for the context object.
    *
-   * @param {string} [key] - Key to retrieve from the context. If not specified, will return the whole data stored in the context.
-   * @returns {Promise<*>} Value for the key in context or the whole context data if key is not specified.
+   * @param key - Key to retrieve from the context. If not specified, will return the whole data stored in the context.
+   * @returns Value for the key in context or the whole context data if key is not specified.
    */
   async context(key?: string): Promise<unknown> {
     const externalContextData = {};
@@ -124,8 +124,8 @@ class Analytics {
   /**
    * Returns the integration, if it's loaded.
    *
-   * @param {string} name - Name of the integration in lowerCase.
-   * @returns {(Integration|null)} The integration instance if it exists and was loaded, otherwise null.
+   * @param name - Name of the integration in lowerCase.
+   * @returns The integration instance if it exists and was loaded, otherwise null.
    */
   integration(name: string): Integration | null {
     return get(this.integrations.get(name), 'instance', null);
@@ -134,8 +134,8 @@ class Analytics {
   /**
    * Getter for user object.
    *
-   * @param {string} [key] - The key of the user object that is returned.
-   * @returns {Promise<*>} Value for the key in user or the whole user data if key is not specified.
+   * @param key - The key of the user object that is returned.
+   * @returns Value for the key in user or the whole user data if key is not specified.
    */
   async user(key?: string): Promise<Record<string, unknown> | unknown> {
     if (!this.storage) {
@@ -156,7 +156,6 @@ class Analytics {
       logger.error(
         `An error occurred when trying to get user value for key '${key}': ${error}. Returning null instead.`,
       );
-      return null;
     }
 
     return null;
@@ -165,11 +164,11 @@ class Analytics {
   /**
    * Sets the consent and passes it to the registered integrations.
    *
-   * @param {ConsentData} data - Consent object to be stored.
+   * @param data - Consent object to be stored.
    * @param data.marketing
    * @param data.preferences
    * @param data.statistics
-   * @returns {Promise<Analytics>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async setConsent(data: {
     marketing?: boolean;
@@ -219,7 +218,7 @@ class Analytics {
   /**
    * [DEPRECATED] - Replaced by useContext.
    *
-   * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
+   * @returns The analytics instance that was used when calling this method to allow chaining.
    *
    */
   setContext(): Analytics {
@@ -233,9 +232,9 @@ class Analytics {
   /**
    * Adds the context function to the array of functions that will provide additional data to be appended to the default context.
    *
-   * @param {Function} contextFn - A function that will return context data to be appended to the default context.
+   * @param contextFn - A function that will return context data to be appended to the default context.
    *
-   * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
+   * @returns The analytics instance that was used when calling this method to allow chaining.
    *
    */
   useContext(contextFn: () => unknown): Analytics {
@@ -255,10 +254,9 @@ class Analytics {
   /**
    * Sets the storage instance to be used by analytics.
    *
-   * @param {object} storage - Storage instance that must support the methods
-   *                           getItem(key), setItem(key, value) and removeItem(key).
+   * @param storage - Storage instance that must support the methods getItem(key), setItem(key, value) and removeItem(key).
    *
-   * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
+   * @returns The analytics instance that was used when calling this method to allow chaining.
    */
   setStorage(storage: Storage | null): Analytics {
     if (this.isReady) {
@@ -291,10 +289,10 @@ class Analytics {
   /**
    * Allows the user to be identified with his ID and other properties.
    *
-   * @param {string} userId            - Id of the user.
-   * @param {object} traits            - Properties like name, email, etc of the user.
+   * @param userId - Id of the user.
+   * @param traits - Properties like name, email, etc of the user.
    *
-   * @returns {Promise<Analytics>}     Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async setUser(
     userId: string | null = null,
@@ -323,11 +321,11 @@ class Analytics {
    * Filters valid integrations and loads them for analytics to work with.
    * Integrations passed must be extensions of the abstract class `Integration`.
    *
-   * @param {string} name - Name of the integration.
-   * @param {Integration} Factory - The integration class.
-   * @param {object} options - The options passed for the integration.
+   * @param name - Name of the integration.
+   * @param Factory - The integration class.
+   * @param options - The options passed for the integration.
    *
-   * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
+   * @returns The analytics instance that was used when calling this method to allow chaining.
    *
    */
   addIntegration(
@@ -357,7 +355,7 @@ class Analytics {
   /**
    * Deletes user data.
    *
-   * @returns {Analytics} The analytics instance that was used when calling this method to allow chaining.
+   * @returns The analytics instance that was used when calling this method to allow chaining.
    *
    */
   anonymize(): Analytics {
@@ -384,12 +382,12 @@ class Analytics {
    * Track method for custom events.
    * Builds the track object with page default properties on the context.
    *
-   * @param {module:trackTypes} type    - Type of event to be tracked.
-   * @param {string} event                        - Name of the event.
-   * @param {object} [properties]                 - Properties of the event.
-   * @param {object} [eventContext]               - Context data that is specific for this event.
+   * @param type - Type of event to be tracked.
+   * @param event - Name of the event.
+   * @param properties - Properties of the event.
+   * @param eventContext - Context data that is specific for this event.
    *
-   * @returns {Promise<Analytics>}    Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
 .
    */
   async track(
@@ -439,10 +437,10 @@ class Analytics {
    * setConsent methods in order to load integrations that are not yet loaded. It's safe to call this method
    * many times.
    *
-   * @param {boolean} raiseOnLoadedIntegrationsEvent - If the onLoadedIntegrations event should be raised by calling `onLoadedIntegrations` or not.
+   * @param raiseOnLoadedIntegrationsEvent - If the onLoadedIntegrations event should be raised by calling `onLoadedIntegrations` or not.
    *
    * @private
-   * @returns {Promise} Promise that will resolve when the method finishes.
+   * @returns Promise that will resolve when the method finishes.
    */
   async loadIntegrations(
     raiseOnLoadedIntegrationsEvent: boolean,
@@ -514,7 +512,7 @@ class Analytics {
   /**
    * Loads the integrations that should be loaded.
    *
-   * @returns {Promise<Analytics>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async ready(): Promise<Analytics> {
     if (!this.storage) {
@@ -536,8 +534,8 @@ class Analytics {
    * Call a method in all integrations with the specified args and an optional log tag
    * to be used in all logger calls.
    *
-   * @param {Map<Integration>} integrations   - Integrations to call the method.
-   * @param {string} methodName                    - Name of the method to be called in all integrations.
+   * @param integrations - Integrations to call the method.
+   * @param methodName - Name of the method to be called in all integrations.
    * @param  {...*} args                         - Arguments to be passed to the method.
    * @private
    */
@@ -589,11 +587,11 @@ class Analytics {
   /**
    * Base function to get event data to be sent to integrations.
    *
-   * @param {string} type                           - Type of the event, ex: page, track, onSetUser.
-   * @param {object} [additionalData]               - Additional data to be added to the final event data.
-   * @param {object} [eventContext]                 - Context data that is specific for this event.
+   * @param type - Type of the event, ex: page, track, onSetUser.
+   * @param additionalData  - Additional data to be added to the final event data.
+   * @param eventContext - Context data that is specific for this event.
    *
-   * @returns {Promise<object>}                     - Data for the event.
+   * @returns Data for the event.
    * @private
    */
   async getEventData(
@@ -623,7 +621,7 @@ class Analytics {
   /**
    * Returns event data that will be sent on an 'onSetUser' event.
    *
-   * @returns {Promise<object>} - User data to be sent to integrations.
+   * @returns User data to be sent to integrations.
    * @private
    */
   async getSetUserEventData(): Promise<EventData> {
@@ -636,7 +634,7 @@ class Analytics {
   /**
    * Returns event data that will be sent on an 'onSetUser' event.
    *
-   * @returns {Promise<object>} - Load data to be sent to integrations.
+   * @returns Load data to be sent to integrations.
    * @private
    */
   async getLoadEventData(): Promise<EventData> {
@@ -649,12 +647,12 @@ class Analytics {
   /**
    * Gets event data for a track event.
    *
-   * @param {string} type                      - Type of the event being called.
-   * @param {string} event                     - Name of the event from analytics.track call.
-   * @param {object} [properties]              - Event properties from analytics.track call.
-   * @param {object} [eventContext]            - Context data that is specific for this event.
+   * @param type - Type of the event being called.
+   * @param event - Name of the event from analytics.track call.
+   * @param properties - Event properties from analytics.track call.
+   * @param eventContext - Context data that is specific for this event.
    *
-   * @returns {Promise<object>}                - Track event data to be sent to integrations.
+   * @returns - Track event data to be sent to integrations.
    * @private
    */
   async getTrackEventData(

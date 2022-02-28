@@ -1,10 +1,8 @@
 import Analytics, {
   trackTypes as analyticsTrackTypes,
   platformTypes,
-} from '../../../analytics/src';
-// } from '@farfetch/blackout-analytics';
-import type IntegrationRuntimeData from '../../../analytics/src/types/integrationRuntimeData.types';
-// import type IntegrationRuntimeData from '@farfetch/blackout-analytics/types/integrationRuntimeData.types';
+} from '@farfetch/blackout-analytics';
+import type IntegrationRuntimeData from '@farfetch/blackout-analytics/types/integrationRuntimeData.types';
 
 /**
  * Analytics base class.
@@ -49,9 +47,9 @@ class AnalyticsWeb extends Analytics {
    * This can happen whenever the user gives consent for a specific category mid session.
    *
    * @private
-   * @param {Array} loadedIntegrations - List of integrations that were loaded.
+   * @param loadedIntegrations - List of integrations that were loaded.
    *
-   * @returns {Promise} Promise that will resolve when the method finishes.
+   * @returns Promise that will resolve when the method finishes.
    */
   async onLoadedIntegrations(
     loadedIntegrations: Map<string, IntegrationRuntimeData>,
@@ -77,11 +75,11 @@ class AnalyticsWeb extends Analytics {
   /**
    * Track method for custom events.
    *
-   * @param {string} event            - Name of the event.
-   * @param {object} [properties]     - Properties of the event.
-   * @param {object} [eventContext]   - Context data that is specific for this event.
+   * @param event - Name of the event.
+   * @param properties  - Properties of the event.
+   * @param eventContext - Context data that is specific for this event.
    *
-   * @returns {Promise<AnalyticsWeb>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async track(
     event: string,
@@ -101,11 +99,11 @@ class AnalyticsWeb extends Analytics {
   /**
    * Tracks a page view.
    *
-   * @param {string} event            - Name of the event.
-   * @param {object} [properties]     - Properties of the event.
-   * @param {object} [eventContext]   - Context data that is specific for this event.
+   * @param event - Name of the event.
+   * @param properties - Properties of the event.
+   * @param eventContext - Context data that is specific for this event.
    *
-   * @returns {Promise<AnalyticsWeb>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async page(
     event: string,

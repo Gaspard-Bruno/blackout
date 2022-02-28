@@ -15,9 +15,9 @@ class Entity {
   /**
    * Retrieves stored data.
    *
-   * @param {string} [key] - Property of object data.
+   * @param key - Property of object data.
    *
-   * @returns {*} Retrieves stored data.
+   * @returns Retrieves stored data.
    */
   get(key?: string): unknown {
     return key ? this.data[key] : this.data;

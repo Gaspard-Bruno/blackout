@@ -21,7 +21,7 @@ class Consent {
   /**
    * Constructs a new consent instance with the passed in storage wrapper instance.
    *
-   * @param {StorageWrapper} storage - The storage wrapper instance where data will be stored.
+   * @param storage - The storage wrapper instance where data will be stored.
    */
   constructor(storage: StorageWrapper) {
     // NOTE: For now, we will only check if the storage reference is set to something,
@@ -40,7 +40,7 @@ class Consent {
   /**
    * Returns the stored consent object. If not defined, returns the defaults.
    *
-   * @returns {Promise<ConsentData>} Promise that will resolve with the consent data.
+   * @returns Promise that will resolve with the consent data.
    */
   async get(): Promise<ConsentData> {
     const getItem = (await this.storage.getItem('consent')) as Record<
@@ -58,11 +58,11 @@ class Consent {
   /**
    * Merges consent default properties with incoming ones from data received.
    *
-   * @param {object} [data] - Object with properties for the different types of preferences (Marketing, preferences or statistics).
+   * @param data - Object with properties for the different types of preferences (Marketing, preferences or statistics).
    * @param data.marketing
    * @param data.preferences
    * @param data.statistics
-   * @returns {Promise<Consent>} Promise that will resolve with the instance that was used when calling this method to allow chaining.
+   * @returns Promise that will resolve with the instance that was used when calling this method to allow chaining.
    */
   async set(
     data: {

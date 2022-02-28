@@ -15,9 +15,9 @@ const hashPlainTextString = (plainString: string): string =>
  * Hashes some user properties that we receive from the /users/me request through analytics.setUser().
  * This might be necessary in cases where we pass user PII data to third-parties.
  *
- * @param {object} userData - The analytics user data object.
+ * @param userData - The analytics user data object.
  *
- * @returns {object} - The same object with some hashed properties.
+ * @returns - The same object with some hashed properties.
  */
 const hashUserData = (
   userData: Record<string, unknown>,
